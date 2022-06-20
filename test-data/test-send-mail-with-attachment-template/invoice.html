@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+</head>
+
+<body>
+    <p>
+        <span>INVOICE</span>
+        <span style="float: right;overflow: hidden; align-items: right;">
+            <img alt="ABC" src="images/abc.png" title=""></span>
+    </p>
+    <p><span></span></p>
+    <p><span>ABC</span></p>
+    <p><span>John Doe, Treasurer</span></p>
+    <p><span><a href="https://abc.org.uk/">https://abc.org.uk/</a></span>
+    </p>
+    <p><span>Charity Registered Number: XXX</span></p>
+    <p><span></span></p>
+    <p><span></span></p>
+    <hr>
+    <table>
+        <tbody>
+            <tr>
+                <td colspan="1" rowspan="1">
+                    <p><span>BILL TO</span></p>
+                    <p><span>{{ parent_name }}</span></p>
+                    <p><span><a href="mailto:{{ parent_email }}">{{ parent_email }}</a></span></p>
+                    <p><span></span></p>
+                </td>
+                <td colspan="1" rowspan="1">
+                    <p><span>Invoice number: </span><span>{{invoice_id}}</span></p>
+                    <p><span>Invoice date: </span><span>{{invoice_date}}</span></p>
+                    <p><span></span></p>
+                    <p><span>Amount Due (GBP): </span><span>&pound;{{amount_due}}</span></p>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <p><span></span></p>
+    <p><span></span></p><a></a><a></a>
+    <table>
+        <tbody>
+            <tr>
+                <td colspan="1" rowspan="1">
+                    <p><span>Items</span></p>
+                </td>
+                <td colspan="1" rowspan="1">
+                    <p><span>Quantity</span></p>
+                </td>
+                <td colspan="1" rowspan="1">
+                    <p><span>Price</span></p>
+                </td>
+                <td colspan="1" rowspan="1">
+                    <p><span>Total</span></p>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1" rowspan="1">
+                    <p><span>{{item_line}}</span></p>
+                </td>
+                <td colspan="1" rowspan="1">
+                    <p><span>1 <br></span></p>
+                </td>
+                <td colspan="1" rowspan="1">
+                    <p><span>&pound;{{amount_due}}</span></p>
+                </td>
+                <td colspan="1" rowspan="1">
+                    <p><span>&pound;{{amount_due}}</span></p>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1" rowspan="1">
+                    <p><span></span></p>
+                </td>
+                <td colspan="1" rowspan="1">
+                    <p><span></span></p>
+                </td>
+                <td colspan="1" rowspan="1">
+                    <p><span>Total:</span></p>
+                </td>
+                <td colspan="1" rowspan="1">
+                    <p><span>&pound;{{amount_due}}</span></p>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <p><span></span></p>
+    <hr>
+    <p><span>Payment terms: payment within 2 weeks via bank transfer to the account detailed
+            below.</span></p>
+    <p><span></span></p>
+    <p><span>Bank Details</span></p>
+    <p><span>ABC </span></p>
+    <p><span>Nice bank</span></p>
+    <p><span>Sort Code: 12-34-56 </span></p>
+    <p><span>Account Number: 123456</span></p>
+    <p><span></span></p>
+    <p><span>Please use the invoice number as a reference when making payment.</span></p>
+    <p><span>Thank you!</span></p>
+</body>
+
+</html>

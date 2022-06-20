@@ -3,9 +3,18 @@ name = "py-mail-templates"
 version = "0.1.0"
 description = ""
 authors = ["Jean-Charles Callu <jc@callu.me>"]
+packages = [
+    {include = "send_mail_with_attachment"},
+]
+
+[tool.poetry.scripts]
+send-mail-with-attachment="send_mail_with_attachment.command:main"
 
 [tool.poetry.dependencies]
 python = "^3.9"
+pandas = "^1.4.2"
+Jinja2 = "^3.1.2"
+pdfkit = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 

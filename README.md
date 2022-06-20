@@ -15,10 +15,9 @@
     - CSV (...all input fields, email status code, email date, gocardless payment id)
     
 - Application will:
-    - Create an email and invoice in output folder
-    - Send an email with formatted invoice to parent and blind copy to archive email
-    - Schedule a one-off payment with GoCardless
-    - Write out summary as CSV
+    - Render an email and add a pdf to the output folder
+    - Send an email with a formatted attachment to each recipient
+    - Send out a summary email back to the original "SMTP_USERNAME"
 
 ### Reconciliation sub-command
 
@@ -40,12 +39,13 @@
 
 ## TODO:
 
-- [x] send text email through google smtp 
-- [ ] sending HTML email
-- [ ] send PDF as attachment
-- [ ] Generate pdf from google doc export to html
-- [ ] Add template placeholder to google doc export
-- [ ] Get template placeholder data from CSV file
+- [x] MVP: send text email through google smtp 
+- [x] MVP: sending HTML email
+- [x] MVP: send PDF as attachment
+- [x] MVP: Generate email from google doc export to html
+- [x] MVP: Generate pdf from google doc export to html
+- [x] MVP: Add template placeholder to google doc export
+- [x] MVP: Get template placeholder data from CSV file
     - Name
     - Email
     - Invoice number
