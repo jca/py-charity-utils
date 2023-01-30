@@ -13,7 +13,7 @@
     - CSV (name, email, invoice number, payment date, item line, price, payment method, gocardless mandate id, ...)
 - Outputs:
     - CSV (...all input fields, email status code, email date, gocardless payment id)
-    
+
 - Application will:
     - Render an email and add a pdf to the output folder
     - Send an email with a formatted attachment to each recipient
@@ -39,7 +39,7 @@
 
 ## TODO:
 
-- [x] MVP: send text email through google smtp 
+- [x] MVP: send text email through google smtp
 - [x] MVP: sending HTML email
 - [x] MVP: send PDF as attachment
 - [x] MVP: Generate email from google doc export to html
@@ -51,8 +51,8 @@
     - Invoice number
     - Current date
     - Item line (1, 2, 3 children, price)
-    - Payment term (GoCardless, bank transfer) 
-    - Extra metadata: GoCardless mandate        
+    - Payment term (GoCardless, bank transfer)
+    - Extra metadata: GoCardless mandate  
 
-- [ ] Invoice number and gocardless mandate id should be saved together to simplify matching. Use [pandas](https://towardsdatascience.com/read-data-from-google-sheets-into-pandas-without-the-google-sheets-api-5c468536550) to generate/send emails and payment requests. Output updated state in a new CSV file to upload to drive 
+- [ ] Invoice number and gocardless mandate id should be saved together to simplify matching. Use [pandas](https://towardsdatascience.com/read-data-from-google-sheets-into-pandas-without-the-google-sheets-api-5c468536550) to generate/send emails and payment requests. Output updated state in a new CSV file to upload to drive
 - [ ]

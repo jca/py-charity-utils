@@ -1,0 +1,23 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v1.2.3
+    hooks:
+      - id: trailing-whitespace
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
+    hooks:
+      - id: flake8
+        args: [--max-line-length=100]
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: master # or specific git tag
+    hooks:
+      # - id: forbid-space-in-indent
+      # - id: git-check # Configure in .gitattributes
+      # - id: git-dirty # Configure in .gitignore
+      # - id: markdownlint # Configure in .mdlrc
+      # - id: require-ascii
+      # - id: script-must-have-extension
+      - id: shellcheck
+      # - id: shfmt

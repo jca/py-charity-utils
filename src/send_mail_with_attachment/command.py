@@ -28,38 +28,56 @@ def parse_args():
     """parse args"""
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('--input-request-csv',
-                        help='path to CSV file containing one line per email with attachment to generate',
-                        required=True)
+    parser.add_argument(
+        '--input-request-csv',
+        help='path to CSV file containing one line per email with attachment to generate',
+        required=True
+    )
 
-    parser.add_argument('--id-field',
-                        help="id field (used to suffix attachments filenames)",
-                        default="id")
+    parser.add_argument(
+        '--id-field',
+        help="id field (used to suffix attachments filenames)",
+        default="id"
+    )
 
-    parser.add_argument('--email-field',
-                        help="email field (used to send emails)",
-                        default="email")
+    parser.add_argument(
+        '--email-field',
+        help="email field (used to send emails)",
+        default="email"
+    )
 
-    parser.add_argument('--email-subject',
-                        help="email subject",
-                        required=True)
+    parser.add_argument(
+        '--email-subject',
+        help="email subject",
+        required=True
+    )
 
-    parser.add_argument('--input-email-template-html',
-                        help='path to HTML file containing the template for the email',
-                        required=True)
+    parser.add_argument(
+        '--input-email-template-html',
+        help='path to HTML file containing the template for the email',
+        required=True
+    )
 
-    parser.add_argument('--input-attachment-template-html',
-                        help='HTML file containing attachment', required=True)
+    parser.add_argument(
+        '--input-attachment-template-html',
+        help='HTML file containing attachment', required=True
+    )
 
-    parser.add_argument('--attachment-file-prefix',
-                        help='attachment file prefix', required=True)
+    parser.add_argument(
+        '--attachment-file-prefix',
+        help='attachment file prefix', required=True
+    )
 
-    parser.add_argument('--output-dir', required=True,
-                        help="path to write all output")
+    parser.add_argument(
+        '--output-dir', required=True,
+        help="path to write all output"
+    )
 
-    parser.add_argument('--force',
-                        help="use this flag to actually send out emails",
-                        action='store_true')
+    parser.add_argument(
+        '--force',
+        help="use this flag to actually send out emails",
+        action='store_true'
+    )
 
     return parser.parse_args()
 

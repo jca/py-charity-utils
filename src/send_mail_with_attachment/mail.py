@@ -40,7 +40,7 @@ def prepare_message(
     msg.attach(MIMEText(html, 'html'))
 
     for file_path in file_paths or []:
-        attachment_name=basename(file_path)
+        attachment_name = basename(file_path)
         with open(file_path, "rb") as file_handle:
             part = MIMEApplication(
                 file_handle.read(),
