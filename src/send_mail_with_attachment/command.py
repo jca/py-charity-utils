@@ -141,8 +141,11 @@ def main():
             attachment_html_path = f'{tmp_dir_path}/{attachment_file_prefix}-{id}.html'
             attachment_pdf_path = f'{output_dir}/{attachment_file_prefix}-{id}.pdf'
 
-            email_html = email_template.render(**record)
-            attachment_html = attachment_template.render(**record)
+            structured_record = expand_record_lists(record)
+            print(f"{structured_record=}")
+            exit
+            email_html = email_template.render(**structured_record)
+            attachment_html = attachment_template.render(**structured_record)
             with open(attachment_html_path, 'w', encoding="utf-8") as attachment_file:
                 attachment_file.write(attachment_html)
 
@@ -185,3 +188,24 @@ def main():
     ))
 
     smtp_server.quit()
+
+
+def expand_record_lists(record: dict[str, str], separator='.'):
+    """
+    Transform a flat csv row into a row containing lists of dictionaries
+    For example, `field.123.subfield` will be transformed into a structure
+    of shape     `field[123][subfield]`
+    """
+    output_record = {}
+    for field, value in record.items():
+        parts = field.rsplit(separator, maxsplit=3)
+        if len(parts) == 3:
+            [output_field, index, output_subfield] = parts
+            if output_field not in output_record:
+                output_record[output_field] = {}
+            if index not in output_record[output_field]:
+                output_record[output_field][index] = {}
+            output_record[output_field][index][output_subfield] = value
+        else:
+            output_record[field] = value
+    return output_record

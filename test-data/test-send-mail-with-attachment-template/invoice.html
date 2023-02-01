@@ -47,29 +47,25 @@
                     <p><span>Items</span></p>
                 </td>
                 <td colspan="1" rowspan="1">
-                    <p><span>Quantity</span></p>
-                </td>
-                <td colspan="1" rowspan="1">
                     <p><span>Price</span></p>
                 </td>
                 <td colspan="1" rowspan="1">
                     <p><span>Total</span></p>
                 </td>
             </tr>
+            {% for _k, item_line in item_lines.items() -%}
             <tr>
                 <td colspan="1" rowspan="1">
-                    <p><span>{{item_line}}</span></p>
+                    <p><span>{{item_line.description}}</span></p>
                 </td>
                 <td colspan="1" rowspan="1">
-                    <p><span>1 <br></span></p>
+                    <p><span>{{currency}}{{item_line.amount}}</span></p>
                 </td>
                 <td colspan="1" rowspan="1">
-                    <p><span>&pound;{{amount_due}}</span></p>
-                </td>
-                <td colspan="1" rowspan="1">
-                    <p><span>&pound;{{amount_due}}</span></p>
+                    <p><span>{{currency}}{{item_line.amount}}</span></p>
                 </td>
             </tr>
+            {% endfor -%}
             <tr>
                 <td colspan="1" rowspan="1">
                     <p><span></span></p>
