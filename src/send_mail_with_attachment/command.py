@@ -10,6 +10,7 @@ from tempfile import TemporaryDirectory
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import pandas
 import pdfkit
+import re
 from send_mail_with_attachment.mail import get_smtp_server, prepare_message
 
 SMTP_HOST = os.environ['SMTP_HOST']
@@ -125,6 +126,29 @@ def main():
 
     output_dir = os.path.realpath(args.output_dir)
     attachment_pdf_paths = []
+
+    # Extract title rows
+    title_row = None
+    for index, row in request_df.iterrows():
+        if "@" not in row[args.email_field]:
+            if title_row is None:
+                title_row = row
+            request_df.drop(index=index, inplace=True)
+        else:
+            break
+
+    assert title_row is not None, (
+        "The second row of the CSV must be a title row which contains item line descriptions"
+    )
+
+    item_line_pattern = r'^(\w+)\.(\d+)\.(\w+)'
+    for col in request_df.columns:
+        match = re.match(item_line_pattern, col)
+        if match:
+            title_type = title_row[0] or "title"
+            item_line_description_field = f"{match[1]}.{match[2]}.{title_type}"
+            request_df[item_line_description_field] = title_row[col]
+
     with TemporaryDirectory(prefix="pymailtpl") as tmp_dir_path:
         copy_tree(os.path.dirname(
             args.input_attachment_template_html), tmp_dir_path)
@@ -142,8 +166,6 @@ def main():
             attachment_pdf_path = f'{output_dir}/{attachment_file_prefix}-{id}.pdf'
 
             structured_record = expand_record_lists(record)
-            print(f"{structured_record=}")
-            exit
             email_html = email_template.render(**structured_record)
             attachment_html = attachment_template.render(**structured_record)
             with open(attachment_html_path, 'w', encoding="utf-8") as attachment_file:
@@ -169,11 +191,13 @@ def main():
                 ],
             )
 
-            logging.info("sending email %i to %s: %s", i,
-                         recipient_email, os.path.basename(attachment_pdf_path))
-
+            log_prefix = "skipped"
             if args.force:
                 smtp_server.send_message(message)
+                log_prefix = ""
+
+            logging.info(f"{log_prefix} sending email %i to %s: %s", i,
+                         recipient_email, os.path.basename(attachment_pdf_path))
 
     logging.info("successfully sent %i messages", len(attachment_pdf_paths))
 

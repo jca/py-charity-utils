@@ -24,10 +24,14 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 # Install python dependencies
 RUN pip3 install \
     poetry \
-    pre-commit
+    pre-commit \
+    mypy
 
 # Cache pre-commit hooks globally
 COPY .pre-commit-config.yaml .
 RUN git init . && pre-commit install-hooks
+
+# Ensure the poetry environment is visible to VSCode
+RUN poetry config virtualenvs.in-project true
 
 ENTRYPOINT [ "/bin/bash" ]

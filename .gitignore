@@ -1,7 +1,9 @@
 *.pyc
+.DS_Store
 __pycache__
 /.devcontainer/.env
 /.gitignore
 /.vscode/
 /build/
 /sendouts/
+/src/.venv

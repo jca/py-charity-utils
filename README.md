@@ -1,58 +1,85 @@
-# py-mail-templates
+# py-charity-utils
 
 ## Usage
 
-The project contains a [devcontainer](https://code.visualstudio.com/docs/devcontainers/containers) configuration, which allows to run the commands in a controlled environment
+The project contains a [devcontainer](https://code.visualstudio.com/docs/devcontainers/containers) configuration, which allows to run the commands in a reproducible environment
 
 It is advised to run the applications with
 
 - [Visual Studio Code](https://code.visualstudio.com/download) and the following extensions installed: `ms-vscode-remote.remote-containers`, `ms-vscode-remote.remote-ssh`
 - [Docker](https://docs.docker.com/get-docker/): A container environment which allows to run the project in a controlled "sandbox" on your machine
 
+
+## Input format (CSV)
+
+The scripts in this using as input a CSV file with a convention based layout
+
+|        | customer_id     | customer_name  | gocardless_email  | item_lines.1.child_name | item_lines.2.child_name |
+| ------ | ----------------| -------------- | ----------------- | ----------------------- | ----------------------- |
+| title  | Customer ID     | Customer name  | Gocardless email  | Classes - First child   | Classes - Second child  |
+| amount |                 |                |                   | 100.00                  | 90.00                   |
+|        | ABC1            | Pierre Curie   | pierre@curie.fr   | Irene                   | Eve                     |
+|        | ABC2            | Louis Pasteur  | louis@pasteur.fr  | Jean-Baptiste           | Marie-Louise            |
+
+Note:
+
+- The first column is a row which contains column names for use by the modules
+- `customer_id` is required for each customer. This is used in invoice generation
+- `gocardless_email` is required for gocardless customer exports to be matched
+- `abc.1.cde`: allows to generate for example multiple item lines. Here the first row's `item_lines` resolves to the following structure in email templates:
+
+```json
+{
+  "item_lines": [
+    {
+      "title": "Classes - First child",
+      "child_name": "Irene",
+      "amount": 100.00,
+    },
+    {
+      "title": "Classes - Second child (10% discount)",
+      "child_name": "Eve",
+      "amount": 90.00,
+    }
+  ]
+}
+```
+
 ## Features
 
-### send-mail-with-attachment
+### generate-gocardless-payments-csv
 
-- Env:
+Inputs:
+
+  - Invoice CSV according to the [input format](#input-format-csv)
+  - GoCardless customers CSV (name, email, customer_id, mandate_id)
+
+Process: the application will join and transform both CSV input files into a CSV output
+
+Outputs:
+
+  - GoCardless payment CSV: this file can be imported in GoCardless
+
+### send-mail-with-attachment (IN PROGRESS)
+
+Required environment variables:
+
   - SMTP_HOST
+  - SMTP_PORT
   - SMTP_USERNAME
   - SMTP_PASSWORD
-- Inputs:
-  - Invoice CSV (name, email, invoice number, payment date, item line, price, payment method)
-- Outputs:
-  - CSV (...all input fields, email status, email date)
 
-- Application will:
+Inputs:
+
+  - Invoice CSV (name, email, invoice number, payment date, item line, price, payment method)
+
+Process:
+
   - Render an email and add a pdf to the output folder
   - Send an email with a formatted attachment to each recipient
-  - Send out a summary email back to the original "SMTP_USERNAME", including an archive of the emails and attachment sent
+  - Send out a summary email back to "SMTP_USERNAME", including an archive of the emails and attachments sent
 
-Example usage:
+Outputs: none - this script only sends emails
 
-```bash
-# From within the container
-(cd src && poetry run send-mail-with-attachment --help)
-```
 
-### generate-gocardless-payment-csv (TODO)
 
-- Inputs:
-  - Invoice CSV (name, email, invoice number, payment date, item line, price, payment method)
-  - GoCardless customers CSV (name, email, customer_id, mandate_id)
-- Outputs:
-  - GoCardless payment CSV
-
-- Application will:
-  - Query each payment id and save
-    - gocardless payment status
-    - gocardless payment date
-    - gocardless payment amoun
-    - outstanding amount
-  - Output a summary detail for all new payments
-  - Generate a new CSV file
-
-Example usage:
-
-```bash
-(cd src && poetry run generate-gocardless-payment-csv --help)
-```
