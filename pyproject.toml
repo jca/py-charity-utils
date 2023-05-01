@@ -24,9 +24,6 @@ autoflake = "^2.0.1"
 pytest = "^7.2.1"
 pandas-stubs = "^2.0.0.230412"
 
-[tool.mypy]
-enable_recursive_aliases = true
-
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

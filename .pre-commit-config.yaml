@@ -9,14 +9,16 @@ repos:
     hooks:
       - id: flake8
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    ### - repo: https://github.com/a-t-0/mypy
-    rev: v0.950
-    hooks:
-      - id: mypy
-        verbose: true
-        args: [--show-error-codes]
-        additional_dependencies: ['types-requests']
+  # TODO: re-enable with fixes
+  # Disabled due to missing stubs in pre-commit
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   ### - repo: https://github.com/a-t-0/mypy
+  #   rev: v0.950
+  #   hooks:
+  #     - id: mypy
+  #       verbose: true
+  #       args: [--show-error-codes]
+  #       additional_dependencies: ['types-requests']
 
   - repo: https://github.com/myint/autoflake
     rev: v1.4
@@ -38,9 +40,3 @@ repos:
       - id: script-must-have-extension
       - id: shellcheck
       # - id: shfmt
-
-  # - repo: https://github.com/koalaman/shellcheck-precommit
-  #   rev: v0.9.0
-  #   hooks:
-  #   -   id: shellcheck
-#       args: ["--severity=warning"]  # Optionally only show errors and warnings

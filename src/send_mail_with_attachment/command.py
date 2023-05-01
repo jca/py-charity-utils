@@ -8,8 +8,9 @@ import logging
 import os
 from tempfile import TemporaryDirectory
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+import json
 import pandas
-import pdfkit
+import pdfkit  # type: ignore
 import re
 from send_mail_with_attachment.mail import get_smtp_server, prepare_message
 
@@ -166,6 +167,8 @@ def main():
             attachment_pdf_path = f'{output_dir}/{attachment_file_prefix}-{id}.pdf'
 
             structured_record = expand_record_lists(record)
+            print(json.dumps(structured_record, indent=2))
+
             email_html = email_template.render(**structured_record)
             attachment_html = attachment_template.render(**structured_record)
             with open(attachment_html_path, 'w', encoding="utf-8") as attachment_file:
@@ -214,22 +217,25 @@ def main():
     smtp_server.quit()
 
 
+Record = dict[str, float | str | "Record"]
+
+
 def expand_record_lists(record: dict[str, str], separator='.'):
     """
     Transform a flat csv row into a row containing lists of dictionaries
     For example, `field.123.subfield` will be transformed into a structure
     of shape     `field[123][subfield]`
     """
-    output_record = {}
+    output_record: Record = {}
     for field, value in record.items():
         parts = field.rsplit(separator, maxsplit=3)
         if len(parts) == 3:
             [output_field, index, output_subfield] = parts
             if output_field not in output_record:
                 output_record[output_field] = {}
-            if index not in output_record[output_field]:
-                output_record[output_field][index] = {}
-            output_record[output_field][index][output_subfield] = value
+            if index not in output_record[output_field]:  # type: ignore
+                output_record[output_field][index] = {}  # type: ignore
+            output_record[output_field][index][output_subfield] = value  # type: ignore
         else:
             output_record[field] = value
     return output_record

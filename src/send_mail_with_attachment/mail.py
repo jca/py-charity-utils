@@ -6,12 +6,12 @@ import smtplib
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.utils import COMMASPACE, formatdate
+from email.utils import formatdate
 from os.path import basename
 from typing import List
 
 
-def get_smtp_server(host: str, port: str, user: str, password: str) -> smtplib.SMTP:
+def get_smtp_server(host: str, port: int, user: str, password: str) -> smtplib.SMTP:
     "Prepares smtp server instance from environment variables"
 
     server = smtplib.SMTP_SSL(host, port)
@@ -33,7 +33,8 @@ def prepare_message(
 
     msg = MIMEMultipart()
     msg['From'] = send_from
-    msg['To'] = COMMASPACE.join(send_to)
+    for recipient in send_to:
+        msg['To'] = recipient
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = subject
 

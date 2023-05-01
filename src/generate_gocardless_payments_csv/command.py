@@ -154,19 +154,22 @@ def process_payments(
     non_payment_cols = [col for col in gocardless_all_customers_df.columns if "payment." not in col]
     gocardless_customers_df = gocardless_customers_df[non_payment_cols]
 
-    # Invoice requests: extract title rows
-    title_row = None
-    for index, row in invoice_df.iterrows():
-        if "@" not in row[invoice_gocardless_email_field]:
-            if title_row is None:
-                title_row = row
-            invoice_df.drop(index=index, inplace=True)
-        else:
-            break
+    # Invoice requests: apply meta rows
+    if "meta" in invoice_df.columns:
+        for index, row in invoice_df.iterrows():
+            meta_value = row["meta"]
+            if row["meta"]:
+                # Add all values from row
+                for column in invoice_df.columns:
+                    if row[column]:
+                        column_parts = column.split(".")
+                        meta_column_name = ".".join(column_parts[:-1] + [meta_value])
+                        invoice_df[meta_column_name] = row[column]
+                invoice_df.drop(index=index, inplace=True)
+            else:
+                break
 
-    assert title_row is not None, (
-        "The second row of the CSV must be a title row which contains item descriptions for payments"
-    )
+    title_row = {}  # TODO remove this and use csv meta-data merge instead
 
     item_line_amount_pattern = r'^item_lines.\d+.amount'
     item_line_amount_columns = [col for col in invoice_df.columns if re.match(item_line_amount_pattern, col)]
@@ -196,10 +199,11 @@ def process_payments(
     )
 
     # Invoice requests: Check whether there are multiple invoice requests per customer
-    duplicate_customers = invoice_df[invoice_customer_id_field][invoice_df[invoice_customer_id_field].duplicated()]
-    assert len(duplicate_customers) == 0, (
+    duplicate_customers_idx = invoice_df[invoice_customer_id_field].duplicated()
+    duplicate_customers_df = invoice_df[duplicate_customers_idx]
+    assert duplicate_customers_df.size == 0, (
         f"There are customers with duplicate invoices:"
-        f"{duplicate_customers}"
+        f"{duplicate_customers_df}"
     )
 
     # Invoice requests: Retain only invoices which should be paid with GoCardless
@@ -263,6 +267,9 @@ def process_payments(
     for payment_amount_column in payment_amount_columns:
         # Find the payment date and payment id
         match = re.match(payment_amount_pattern, payment_amount_column)
+        if not match:
+            raise ValueError("payment amount column did not match pattern")
+
         payment_id = match.group(1)
         df = merged_gocardless_invoice_df.copy()
         df["payment.description"] = df["payment.metadata.INVOICE_ID"] + f"/{payment_id}"
