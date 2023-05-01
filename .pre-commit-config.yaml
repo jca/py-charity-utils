@@ -9,6 +9,15 @@ repos:
     hooks:
       - id: flake8
 
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    ### - repo: https://github.com/a-t-0/mypy
+    rev: v0.950
+    hooks:
+      - id: mypy
+        verbose: true
+        args: [--show-error-codes]
+        additional_dependencies: ['types-requests']
+
   - repo: https://github.com/myint/autoflake
     rev: v1.4
     hooks:
@@ -24,8 +33,14 @@ repos:
       # - id: forbid-space-in-indent
       # - id: git-check # Configure in .gitattributes
       # - id: git-dirty # Configure in .gitignore
-      # - id: markdownlint # Configure in .mdlrc
+      - id: markdownlint # Configure in .mdlrc
       # - id: require-ascii
-      # - id: script-must-have-extension
+      - id: script-must-have-extension
       - id: shellcheck
       # - id: shfmt
+
+  # - repo: https://github.com/koalaman/shellcheck-precommit
+  #   rev: v0.9.0
+  #   hooks:
+  #   -   id: shellcheck
+#       args: ["--severity=warning"]  # Optionally only show errors and warnings

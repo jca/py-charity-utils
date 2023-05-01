@@ -17,15 +17,17 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && apt update \
     && apt install -y \
         wkhtmltopdf \
-        gem shellcheck \
+        ruby \
+        shellcheck \
     && apt -qq autoremove \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies
 RUN pip3 install \
+    mypy \
     poetry \
     pre-commit \
-    mypy
+    vim
 
 # Cache pre-commit hooks globally
 COPY .pre-commit-config.yaml .

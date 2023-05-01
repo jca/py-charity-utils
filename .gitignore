@@ -1,6 +1,7 @@
-*.pyc
-.DS_Store
 __pycache__
+.dmypy.json
+.DS_Store
+*.pyc
 /.devcontainer/.env
 /.gitignore
 /.vscode/
