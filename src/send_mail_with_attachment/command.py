@@ -11,8 +11,8 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 import json
 import pandas
 import pdfkit  # type: ignore
-import re
 from send_mail_with_attachment.mail import get_smtp_server, prepare_message
+from shared.csv_utils import expand_record_lists, process_csv_with_metadata
 
 SMTP_HOST = os.environ['SMTP_HOST']
 SMTP_PORT = os.environ['SMTP_PORT']
@@ -100,13 +100,15 @@ def main():
     email_subject = args.email_subject
     attachment_file_prefix = args.attachment_file_prefix
 
-    request_df = pandas.read_csv(args.input_request_csv)
-    if id_field not in request_df.columns:
+    raw_invoice_df = pandas.read_csv(args.input_request_csv)
+    invoice_df = process_csv_with_metadata(input_df=raw_invoice_df)
+
+    if id_field not in invoice_df.columns:
         raise ValueError(
-            f"{request_df.columns=} must contain --id-field ({args.id_field})")
-    if email_field not in request_df.columns:
+            f"{invoice_df.columns=} must contain --id-field ({args.id_field})")
+    if email_field not in invoice_df.columns:
         raise ValueError(
-            f"{request_df.columns=} must contain --email-field ({email_field})"
+            f"{invoice_df.columns=} must contain --email-field ({email_field})"
         )
 
     email_jinja_env = Environment(
@@ -128,33 +130,11 @@ def main():
     output_dir = os.path.realpath(args.output_dir)
     attachment_pdf_paths = []
 
-    # Extract title rows
-    title_row = None
-    for index, row in request_df.iterrows():
-        if "@" not in row[args.email_field]:
-            if title_row is None:
-                title_row = row
-            request_df.drop(index=index, inplace=True)
-        else:
-            break
-
-    assert title_row is not None, (
-        "The second row of the CSV must be a title row which contains item line descriptions"
-    )
-
-    item_line_pattern = r'^(\w+)\.(\d+)\.(\w+)'
-    for col in request_df.columns:
-        match = re.match(item_line_pattern, col)
-        if match:
-            title_type = title_row[0] or "title"
-            item_line_description_field = f"{match[1]}.{match[2]}.{title_type}"
-            request_df[item_line_description_field] = title_row[col]
-
     with TemporaryDirectory(prefix="pymailtpl") as tmp_dir_path:
         copy_tree(os.path.dirname(
             args.input_attachment_template_html), tmp_dir_path)
 
-        for (i, record) in request_df.iterrows():
+        for (i, record) in invoice_df.iterrows():
             id = record[id_field]
             recipient_email = record[email_field]
 
@@ -215,27 +195,3 @@ def main():
     ))
 
     smtp_server.quit()
-
-
-Record = dict[str, float | str | "Record"]
-
-
-def expand_record_lists(record: dict[str, str], separator='.'):
-    """
-    Transform a flat csv row into a row containing lists of dictionaries
-    For example, `field.123.subfield` will be transformed into a structure
-    of shape     `field[123][subfield]`
-    """
-    output_record: Record = {}
-    for field, value in record.items():
-        parts = field.rsplit(separator, maxsplit=3)
-        if len(parts) == 3:
-            [output_field, index, output_subfield] = parts
-            if output_field not in output_record:
-                output_record[output_field] = {}
-            if index not in output_record[output_field]:  # type: ignore
-                output_record[output_field][index] = {}  # type: ignore
-            output_record[output_field][index][output_subfield] = value  # type: ignore
-        else:
-            output_record[field] = value
-    return output_record

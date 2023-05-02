@@ -10,7 +10,9 @@ from typing import Optional
 import pandas
 from datetime import date
 
-logging.basicConfig(level=logging.WARN)
+from shared.csv_utils import process_csv_with_metadata
+
+logging.basicConfig(level=logging.DEBUG)
 stream = io.StringIO()
 logger = logging.getLogger()
 handler = logging.StreamHandler(stream)
@@ -41,6 +43,13 @@ def parse_args():
         '--invoice-id-prefix',
         help="invoice id prefix: the first part of the generated invoice id '<prefix>/<customer_id>'",
         required=True,
+    )
+
+    parser.add_argument(
+        '--invoice-date',
+        help="invoice date'",
+        required=False,
+        default=date.today(),
     )
 
     parser.add_argument(
@@ -89,17 +98,18 @@ def main():
 
     args = parse_args()
     gocardless_all_customers_df = pandas.read_csv(args.input_gocardless_customers_csv)
-    invoice_df = pandas.read_csv(args.input_invoice_requests_csv)
+    raw_invoice_df = pandas.read_csv(args.input_invoice_requests_csv)
 
     payments_df = process_payments(
-        gocardless_all_customers_df,
-        invoice_df,
-        args.invoice_id_prefix,
-        args.invoice_customer_id_field,
-        args.invoice_gocardless_email_field,
-        args.invoice_total_amount_field,
-        args.invoice_payment_method_field,
-        args.invoice_payment_method_value,
+        gocardless_all_customers_df=gocardless_all_customers_df,
+        raw_invoice_df=raw_invoice_df,
+        invoice_id_prefix=args.invoice_id_prefix,
+        invoice_date=args.invoice_date,
+        invoice_customer_id_field=args.invoice_customer_id_field,
+        invoice_gocardless_email_field=args.invoice_gocardless_email_field,
+        invoice_total_amount_field=args.invoice_total_amount_field,
+        invoice_payment_method_field=args.invoice_payment_method_field,
+        invoice_payment_method_value=args.invoice_payment_method_value,
     )
 
     payments_df.to_csv(args.output_gocardless_payments_csv, index=False)
@@ -108,14 +118,17 @@ def main():
 
 def process_payments(
     gocardless_all_customers_df: pandas.DataFrame,
-    invoice_df: pandas.DataFrame,
+    raw_invoice_df: pandas.DataFrame,
     invoice_id_prefix: str,
+    invoice_date: str,
     invoice_customer_id_field: str,
     invoice_gocardless_email_field: str,
     invoice_total_amount_field: str,
     invoice_payment_method_field: Optional[str],
     invoice_payment_method_value: Optional[str],
 ) -> pandas.DataFrame:
+
+    invoice_df = process_csv_with_metadata(raw_invoice_df)
 
     # GoCardless: ensure all required customer columns are present
     required_customer_columns = {
@@ -153,23 +166,6 @@ def process_payments(
     # Gocardless: drop all pre-generated payment columns from gocardless csv
     non_payment_cols = [col for col in gocardless_all_customers_df.columns if "payment." not in col]
     gocardless_customers_df = gocardless_customers_df[non_payment_cols]
-
-    # Invoice requests: apply meta rows
-    if "meta" in invoice_df.columns:
-        for index, row in invoice_df.iterrows():
-            meta_value = row["meta"]
-            if row["meta"]:
-                # Add all values from row
-                for column in invoice_df.columns:
-                    if row[column]:
-                        column_parts = column.split(".")
-                        meta_column_name = ".".join(column_parts[:-1] + [meta_value])
-                        invoice_df[meta_column_name] = row[column]
-                invoice_df.drop(index=index, inplace=True)
-            else:
-                break
-
-    title_row = {}  # TODO remove this and use csv meta-data merge instead
 
     item_line_amount_pattern = r'^item_lines.\d+.amount'
     item_line_amount_columns = [col for col in invoice_df.columns if re.match(item_line_amount_pattern, col)]
@@ -258,10 +254,9 @@ def process_payments(
     # Invoice requests: Build up invoice id
     merged_gocardless_invoice_df["payment.metadata.INVOICE_ID"] = \
         f"{invoice_id_prefix}/" + merged_gocardless_invoice_df[invoice_customer_id_field]
-    merged_gocardless_invoice_df["payment.metadata.INVOICE_DATE"] = date.today()
+    merged_gocardless_invoice_df["payment.metadata.INVOICE_DATE"] = invoice_date
 
     # Scatter over payments
-
     payment_dfs = []
 
     for payment_amount_column in payment_amount_columns:
@@ -271,9 +266,11 @@ def process_payments(
             raise ValueError("payment amount column did not match pattern")
 
         payment_id = match.group(1)
+        charge_date_column = f"payments.{payment_id}.charge_date"
+
         df = merged_gocardless_invoice_df.copy()
         df["payment.description"] = df["payment.metadata.INVOICE_ID"] + f"/{payment_id}"
-        df["payment.charge_date"] = title_row[payment_amount_column]
+        df["payment.charge_date"] = df[charge_date_column]
         df["payment.amount"] = df[payment_amount_column]
         df["payment.currency"] = "GBP"
         payment_dfs.append(df)

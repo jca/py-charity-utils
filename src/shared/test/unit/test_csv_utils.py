@@ -31,9 +31,9 @@ def test_read_csv_with_metadata():
         },
     ])
 
-    expected_df = process_csv_with_metadata(df)
+    processed_df = process_csv_with_metadata(df)
 
-    df = pandas.DataFrame([
+    expected_df = pandas.DataFrame([
         {
             "meta": "",
             "amount_due": "123.45",
@@ -45,5 +45,5 @@ def test_read_csv_with_metadata():
         },
     ])
 
-    assert set(df.columns) == set(expected_df.columns)
-    assert_frames_equal(df, expected_df)
+    assert set(processed_df.columns) == set(expected_df.columns)
+    assert_frames_equal(processed_df, expected_df)

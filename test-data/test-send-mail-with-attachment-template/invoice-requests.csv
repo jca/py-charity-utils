@@ -1,6 +1,6 @@
 meta,parent_id,parent_name,gocardless_email,item_lines.1.amount,item_lines.2.amount,amount_due,invoice_id,invoice_date,payment_method,payments.1.amount,payments.2.amount
-title,Name,Email,Language lessons, Membership,Total,Invoice ID,Invoice date,Payment method,First payment,Second payment
-charge_date,,,,,2021-02-03,2024-05-06
+title,ID,Name,Email,Language lessons, Membership,Total,Invoice ID,Invoice date,Payment method,First payment,Second payment
+charge_date,,,,,,,,,,2021-02-03,2024-05-06
 ,AD, Albert Dupont,albert.dupont@test.email,100.00,23.45,123.45,abc-autumn-01,2022-05-04,GoCardless,23.45,100
 ,GS, Georges Smith,georges.smith@test.email,50.00,23.45,73.45,abc-autumn-02,2022-05-04,GoCardless,23.45,50
 ,SM, Speling Mistake,speling_mistake@test.email,1.00,0,1.00,abc-autumn-04,2022-05-04,bank transfer,0,1
