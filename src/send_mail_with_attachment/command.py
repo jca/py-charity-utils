@@ -8,7 +8,6 @@ import logging
 import os
 from tempfile import TemporaryDirectory
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-import json
 import pandas
 import pdfkit  # type: ignore
 from send_mail_with_attachment.mail import get_smtp_server, prepare_message
@@ -147,8 +146,6 @@ def main():
             attachment_pdf_path = f'{output_dir}/{attachment_file_prefix}-{id}.pdf'
 
             structured_record = expand_record_lists(record)
-            print(json.dumps(structured_record, indent=2))
-
             email_html = email_template.render(**structured_record)
             attachment_html = attachment_template.render(**structured_record)
             with open(attachment_html_path, 'w', encoding="utf-8") as attachment_file:
@@ -156,7 +153,9 @@ def main():
 
             pdfkit.from_file(attachment_html_path, attachment_pdf_path, options={
                 "enable-local-file-access": None,
-                "disable-smart-shrinking": None,
+                "disable-smart-shrinking": '',
+                'page-size': 'A4',
+                'dpi': 400,
             })
 
             attachment_pdf_paths.append(attachment_pdf_path)

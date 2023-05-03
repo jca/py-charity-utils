@@ -180,8 +180,8 @@ def process_payments(
     )
 
     # Invoice requests: cast amount columns to numeric
-    for col in [invoice_total_amount_field, *item_line_amount_columns, *payment_amount_columns]:
-        invoice_df[col] = pandas.to_numeric(invoice_df[col])
+    amount_cols = [invoice_total_amount_field, *item_line_amount_columns, *payment_amount_columns]
+    invoice_df[amount_cols] = invoice_df[amount_cols].replace(r'[^\d.]', '', regex=True).replace('', 0.0).astype(float)
 
     # Invoice requests: Validate that the sum of item_lines is equal to sum of charge amount and total of invoice
     invoice_df["unmatched_amounts"] = \
@@ -190,7 +190,7 @@ def process_payments(
 
     invoice_with_sum_difference_df = invoice_df[invoice_df["unmatched_amounts"] > 0]
     assert len(invoice_with_sum_difference_df) == 0, (
-        f"There are {len(invoice_with_sum_difference_df)} invoices with invalid amounts:"
+        f"There are {len(invoice_with_sum_difference_df)} invoices with invalid amounts:\n"
         f"{invoice_with_sum_difference_df}"
     )
 
