@@ -1,0 +1,6 @@
+mandate.id,customer.id,customer.given_name,customer.family_name,customer.company_name,customer.email
+MD00000001,CU000000001,Albert,Dupont,,albert.dupont@test.email
+MD00000001,CU000000001,Georges,Smith,,georges.smith@test.email
+MD00000001,CU000000001,Foo,Bar,,baz.baz@test.email
+MD00000001,CU000000001,John,Doe,,john.doe@test.email
+MD00000001,CU000000001,Spelling,Mistake,,spelling_mistake@test.email

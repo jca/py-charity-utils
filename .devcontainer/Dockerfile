@@ -17,17 +17,23 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && apt update \
     && apt install -y \
         wkhtmltopdf \
-        gem shellcheck \
+        ruby \
+        shellcheck \
     && apt -qq autoremove \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies
 RUN pip3 install \
+    mypy \
     poetry \
-    pre-commit
+    pre-commit \
+    vim
 
 # Cache pre-commit hooks globally
 COPY .pre-commit-config.yaml .
 RUN git init . && pre-commit install-hooks
+
+# Ensure the poetry environment is visible to VSCode
+RUN poetry config virtualenvs.in-project true
 
 ENTRYPOINT [ "/bin/bash" ]

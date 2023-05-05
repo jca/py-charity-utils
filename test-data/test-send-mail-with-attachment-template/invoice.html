@@ -23,13 +23,13 @@
     <table>
         <tbody>
             <tr>
-                <td colspan="1" rowspan="1">
+                <td>
                     <p><span>BILL TO</span></p>
                     <p><span>{{ parent_name }}</span></p>
                     <p><span><a href="mailto:{{ parent_email }}">{{ parent_email }}</a></span></p>
                     <p><span></span></p>
                 </td>
-                <td colspan="1" rowspan="1">
+                <td>
                     <p><span>Invoice number: </span><span>{{invoice_id}}</span></p>
                     <p><span>Invoice date: </span><span>{{invoice_date}}</span></p>
                     <p><span></span></p>
@@ -38,53 +38,51 @@
             </tr>
         </tbody>
     </table>
-    <p><span></span></p>
-    <p><span></span></p><a></a><a></a>
+    <p></p>
     <table>
         <tbody>
             <tr>
-                <td colspan="1" rowspan="1">
-                    <p><span>Items</span></p>
+                <td>
+                    Items
                 </td>
-                <td colspan="1" rowspan="1">
-                    <p><span>Price</span></p>
+                <td>
+                    Amount
                 </td>
-                <td colspan="1" rowspan="1">
-                    <p><span>Total</span></p>
+                <td>
+                    Total
                 </td>
             </tr>
             {% for _k, item_line in item_lines.items() -%}
             <tr>
-                <td colspan="1" rowspan="1">
-                    <p><span>{{item_line.description}}</span></p>
+                <td>
+                    {{item_line.title}}
                 </td>
-                <td colspan="1" rowspan="1">
-                    <p><span>{{currency}}{{item_line.amount}}</span></p>
+                <td>
+                    {{currency}}{{item_line.amount}}
                 </td>
-                <td colspan="1" rowspan="1">
-                    <p><span>{{currency}}{{item_line.amount}}</span></p>
+                <td>
+                    {{currency}}{{item_line.amount}}
                 </td>
             </tr>
             {% endfor -%}
             <tr>
-                <td colspan="1" rowspan="1">
-                    <p><span></span></p>
+                <td>
                 </td>
-                <td colspan="1" rowspan="1">
-                    <p><span></span></p>
+                <td>
+                    Total:
                 </td>
-                <td colspan="1" rowspan="1">
-                    <p><span>Total:</span></p>
-                </td>
-                <td colspan="1" rowspan="1">
-                    <p><span>&pound;{{amount_due}}</span></p>
+                <td>
+                    &pound;{{amount_due}}
                 </td>
             </tr>
         </tbody>
     </table>
     <p><span></span></p>
     <hr>
-    <p><span>Payment terms: payment within 2 weeks via bank transfer to the account detailed
+    {% if payment_method|lower == "gocardless" %}
+    <p><span>Payment terms: payment on such and such date via {{ payment_method }}</span></p>
+    {% else %}
+    <p><span>Payment terms: payment within 2 weeks via {{ payment_method }} to the account detailed
             below.</span></p>
     <p><span></span></p>
     <p><span>Bank Details</span></p>
@@ -94,6 +92,7 @@
     <p><span>Account Number: 123456</span></p>
     <p><span></span></p>
     <p><span>Please use the invoice number as a reference when making payment.</span></p>
+    {% endif %}
     <p><span>Thank you!</span></p>
 </body>
 

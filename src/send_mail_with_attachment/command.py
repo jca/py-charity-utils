@@ -9,8 +9,9 @@ import os
 from tempfile import TemporaryDirectory
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import pandas
-import pdfkit
+import pdfkit  # type: ignore
 from send_mail_with_attachment.mail import get_smtp_server, prepare_message
+from shared.csv_utils import expand_record_lists, process_csv_with_metadata
 
 SMTP_HOST = os.environ['SMTP_HOST']
 SMTP_PORT = os.environ['SMTP_PORT']
@@ -44,6 +45,18 @@ def parse_args():
         '--email-field',
         help="email field (used to send emails)",
         default="email"
+    )
+
+    parser.add_argument(
+        '--email-sender',
+        help="email sender",
+        default=SMTP_USER
+    )
+
+    parser.add_argument(
+        '--email-reply-to',
+        help="email for reply-to",
+        default=None
     )
 
     parser.add_argument(
@@ -96,15 +109,19 @@ def main():
     id_field = args.id_field
     email_field = args.email_field
     email_subject = args.email_subject
+    email_sender = args.email_sender
+    email_reply_to = args.email_reply_to
     attachment_file_prefix = args.attachment_file_prefix
 
-    request_df = pandas.read_csv(args.input_request_csv)
-    if id_field not in request_df.columns:
+    raw_invoice_df = pandas.read_csv(args.input_request_csv)
+    invoice_df = process_csv_with_metadata(input_df=raw_invoice_df)
+
+    if id_field not in invoice_df.columns:
         raise ValueError(
-            f"{request_df.columns=} must contain --id-field ({args.id_field})")
-    if email_field not in request_df.columns:
+            f"{invoice_df.columns=} must contain --id-field ({args.id_field})")
+    if email_field not in invoice_df.columns:
         raise ValueError(
-            f"{request_df.columns=} must contain --email-field ({email_field})"
+            f"{invoice_df.columns=} must contain --email-field ({email_field})"
         )
 
     email_jinja_env = Environment(
@@ -125,12 +142,14 @@ def main():
 
     output_dir = os.path.realpath(args.output_dir)
     attachment_pdf_paths = []
-    with TemporaryDirectory(prefix="pymailtpl") as tmp_dir_path:
+
+    messages = []
+    with TemporaryDirectory(prefix="py-charity-utils_") as tmp_dir_path:
         copy_tree(os.path.dirname(
             args.input_attachment_template_html), tmp_dir_path)
 
-        for (i, record) in request_df.iterrows():
-            id = record[id_field]
+        for (i, record) in invoice_df.iterrows():
+            id = str(record[id_field])
             recipient_email = record[email_field]
 
             if id.strip() == "":
@@ -142,8 +161,6 @@ def main():
             attachment_pdf_path = f'{output_dir}/{attachment_file_prefix}-{id}.pdf'
 
             structured_record = expand_record_lists(record)
-            print(f"{structured_record=}")
-            exit
             email_html = email_template.render(**structured_record)
             attachment_html = attachment_template.render(**structured_record)
             with open(attachment_html_path, 'w', encoding="utf-8") as attachment_file:
@@ -151,7 +168,9 @@ def main():
 
             pdfkit.from_file(attachment_html_path, attachment_pdf_path, options={
                 "enable-local-file-access": None,
-                "disable-smart-shrinking": None,
+                "disable-smart-shrinking": '',
+                'page-size': 'A4',
+                'dpi': 400,
             })
 
             attachment_pdf_paths.append(attachment_pdf_path)
@@ -159,53 +178,44 @@ def main():
             logging.info(
                 "written %s bytes at %s", os.path.getsize(attachment_pdf_path), attachment_pdf_path)
 
-            message = prepare_message(
-                SMTP_USER,
-                [recipient_email],
-                email_subject,
-                email_html,
-                [
-                    attachment_pdf_path,
-                ],
-            )
+            messages.append((recipient_email, email_subject, email_html, attachment_pdf_path))
 
-            logging.info("sending email %i to %s: %s", i,
-                         recipient_email, os.path.basename(attachment_pdf_path))
+        log_prefix = "skipped"
+        if args.force:
+            log_prefix = ""
 
+        # Send all emails
+        for (recipient_email, email_subject, email_html, attachment_pdf_path) in messages:
+            logging.info(f"{log_prefix} sending email to {recipient_email}: {os.path.basename(attachment_pdf_path)}")
             if args.force:
+                message = prepare_message(
+                    SMTP_USER,
+                    recipient_email,
+                    email_reply_to,
+                    email_subject,
+                    email_html,
+                    [
+                        attachment_pdf_path,
+                    ],
+                )
+                message["Reply-To"] = "tresorerie@lespetitscameleons.org.uk"
                 smtp_server.send_message(message)
 
-    logging.info("successfully sent %i messages", len(attachment_pdf_paths))
+    logging.info(f"successfully sent {len(messages)} messages")
 
-    smtp_server.send_message(prepare_message(
-        SMTP_USER,
-        [SMTP_USER],
-        f"Email sendout record: {email_subject}",
+    report_message = prepare_message(
+        email_sender,
+        email_sender,
+        email_reply_to,
+        f"Email sendout report: {email_subject}",
         f"Last email sent:"
         f"<hr>{email_html}<hr>"
         f"Send-out log: <pre>{stream.getvalue()}</pre>",
         attachment_pdf_paths,
-    ))
+    )
+
+    logging.info(f"successfully sent report to {email_sender}")
+
+    smtp_server.send_message(report_message)
 
     smtp_server.quit()
-
-
-def expand_record_lists(record: dict[str, str], separator='.'):
-    """
-    Transform a flat csv row into a row containing lists of dictionaries
-    For example, `field.123.subfield` will be transformed into a structure
-    of shape     `field[123][subfield]`
-    """
-    output_record = {}
-    for field, value in record.items():
-        parts = field.rsplit(separator, maxsplit=3)
-        if len(parts) == 3:
-            [output_field, index, output_subfield] = parts
-            if output_field not in output_record:
-                output_record[output_field] = {}
-            if index not in output_record[output_field]:
-                output_record[output_field][index] = {}
-            output_record[output_field][index][output_subfield] = value
-        else:
-            output_record[field] = value
-    return output_record

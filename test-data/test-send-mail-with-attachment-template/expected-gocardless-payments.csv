@@ -1,0 +1,3 @@
+mandate.id,customer.id,customer.given_name,customer.family_name,customer.company_name,customer.email,payment.amount,payment.charge_date,payment.metadata.INVOICE_ID,payment.metadata.INVOICE_DATE,payment.currency,payment.description
+MD00000001,CU000000001,Albert,Dupont,,albert.dupont@test.email,123.45,,abc-autumn-01,2022-05-04,GBP,Petits Cameleons - abc-autumn-01
+MD00000001,CU000000001,Georges,Smith,,georges.smith@test.email,73.45,,abc-autumn-02,2022-05-04,GBP,Petits Cameleons - abc-autumn-02

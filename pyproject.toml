@@ -1,22 +1,28 @@
 [tool.poetry]
-name = "py-mail-templates"
+name = "py-charity-utils"
 version = "0.1.0"
 description = ""
 authors = ["Jean-Charles Callu <jc@callu.me>"]
 packages = [
-    {include = "send_mail_with_attachment"},
+    {include = "src"},
 ]
 
 [tool.poetry.scripts]
 send-mail-with-attachment="send_mail_with_attachment.command:main"
+generate-gocardless-payments-csv="generate_gocardless_payments_csv.command:main"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 pandas = "^1.4.2"
 Jinja2 = "^3.1.2"
 pdfkit = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
+
+[tool.poetry.group.dev.dependencies]
+autoflake = "^2.0.1"
+pytest = "^7.2.1"
+pandas-stubs = "^2.0.0.230412"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

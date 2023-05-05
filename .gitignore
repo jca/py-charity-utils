@@ -1,7 +1,10 @@
-*.pyc
 __pycache__
+.dmypy.json
+.DS_Store
+*.pyc
 /.devcontainer/.env
 /.gitignore
 /.vscode/
 /build/
 /sendouts/
+/src/.venv
