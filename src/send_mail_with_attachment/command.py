@@ -48,6 +48,18 @@ def parse_args():
     )
 
     parser.add_argument(
+        '--email-sender',
+        help="email sender",
+        default=SMTP_USER
+    )
+
+    parser.add_argument(
+        '--email-reply-to',
+        help="email for reply-to",
+        default=None
+    )
+
+    parser.add_argument(
         '--email-subject',
         help="email subject",
         required=True
@@ -97,6 +109,8 @@ def main():
     id_field = args.id_field
     email_field = args.email_field
     email_subject = args.email_subject
+    email_sender = args.email_sender
+    email_reply_to = args.email_reply_to
     attachment_file_prefix = args.attachment_file_prefix
 
     raw_invoice_df = pandas.read_csv(args.input_request_csv)
@@ -129,12 +143,13 @@ def main():
     output_dir = os.path.realpath(args.output_dir)
     attachment_pdf_paths = []
 
-    with TemporaryDirectory(prefix="pymailtpl") as tmp_dir_path:
+    messages = []
+    with TemporaryDirectory(prefix="py-charity-utils_") as tmp_dir_path:
         copy_tree(os.path.dirname(
             args.input_attachment_template_html), tmp_dir_path)
 
         for (i, record) in invoice_df.iterrows():
-            id = record[id_field]
+            id = str(record[id_field])
             recipient_email = record[email_field]
 
             if id.strip() == "":
@@ -163,34 +178,44 @@ def main():
             logging.info(
                 "written %s bytes at %s", os.path.getsize(attachment_pdf_path), attachment_pdf_path)
 
-            message = prepare_message(
-                SMTP_USER,
-                [recipient_email],
-                email_subject,
-                email_html,
-                [
-                    attachment_pdf_path,
-                ],
-            )
+            messages.append((recipient_email, email_subject, email_html, attachment_pdf_path))
 
-            log_prefix = "skipped"
+        log_prefix = "skipped"
+        if args.force:
+            log_prefix = ""
+
+        # Send all emails
+        for (recipient_email, email_subject, email_html, attachment_pdf_path) in messages:
+            logging.info(f"{log_prefix} sending email to {recipient_email}: {os.path.basename(attachment_pdf_path)}")
             if args.force:
+                message = prepare_message(
+                    SMTP_USER,
+                    recipient_email,
+                    email_reply_to,
+                    email_subject,
+                    email_html,
+                    [
+                        attachment_pdf_path,
+                    ],
+                )
+                message["Reply-To"] = "tresorerie@lespetitscameleons.org.uk"
                 smtp_server.send_message(message)
-                log_prefix = ""
 
-            logging.info(f"{log_prefix} sending email %i to %s: %s", i,
-                         recipient_email, os.path.basename(attachment_pdf_path))
+    logging.info(f"successfully sent {len(messages)} messages")
 
-    logging.info("successfully sent %i messages", len(attachment_pdf_paths))
-
-    smtp_server.send_message(prepare_message(
-        SMTP_USER,
-        [SMTP_USER],
-        f"Email sendout record: {email_subject}",
+    report_message = prepare_message(
+        email_sender,
+        email_sender,
+        email_reply_to,
+        f"Email sendout report: {email_subject}",
         f"Last email sent:"
         f"<hr>{email_html}<hr>"
         f"Send-out log: <pre>{stream.getvalue()}</pre>",
         attachment_pdf_paths,
-    ))
+    )
+
+    logging.info(f"successfully sent report to {email_sender}")
+
+    smtp_server.send_message(report_message)
 
     smtp_server.quit()

@@ -22,21 +22,22 @@ def get_smtp_server(host: str, port: int, user: str, password: str) -> smtplib.S
 
 def prepare_message(
     send_from: str,
-    send_to: List[str],
+    send_to: str,
+    reply_to: str | None,
     subject: str,
     html: str,
     file_paths: List[str],
 ):
     """send an email with HTML, alt. text and attachments"""
 
-    assert isinstance(send_to, list)
-
     msg = MIMEMultipart()
     msg['From'] = send_from
-    for recipient in send_to:
-        msg['To'] = recipient
+    msg['To'] = send_to
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = subject
+
+    if reply_to:
+        msg['Reply-To'] = reply_to
 
     msg.attach(MIMEText(html, 'html'))
 
