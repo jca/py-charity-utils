@@ -181,12 +181,17 @@ def process_payments(
 
     # Invoice requests: cast amount columns to numeric
     amount_cols = [invoice_total_amount_field, *item_line_amount_columns, *payment_amount_columns]
-    invoice_df[amount_cols] = invoice_df[amount_cols].replace(r'[^\d.]', '', regex=True).replace('', 0.0).astype(float)
+    invoice_df[amount_cols] = invoice_df[amount_cols] \
+        .replace(r'[^\-\d.]', '', regex=True) \
+        .replace('', 0.0) \
+        .astype(float)
 
     # Invoice requests: Validate that the sum of item_lines is equal to sum of charge amount and total of invoice
-    invoice_df["unmatched_amounts"] = \
-        abs(invoice_df[invoice_total_amount_field] - sum(invoice_df[col] for col in item_line_amount_columns)) + \
-        abs(invoice_df[invoice_total_amount_field] - sum(invoice_df[col] for col in payment_amount_columns))
+    invoice_df["unmatched_amounts"] = round(
+        abs(invoice_df[invoice_total_amount_field] - sum(invoice_df[col] for col in item_line_amount_columns)) +
+        abs(invoice_df[invoice_total_amount_field] - sum(invoice_df[col] for col in payment_amount_columns)),
+        2
+    )
 
     invoice_with_sum_difference_df = invoice_df[invoice_df["unmatched_amounts"] > 0]
     assert len(invoice_with_sum_difference_df) == 0, (
@@ -268,7 +273,7 @@ def process_payments(
         payment_id = match.group(1)
         charge_date_column = f"payments.{payment_id}.charge_date"
 
-        df = merged_gocardless_invoice_df.copy()
+        df = merged_gocardless_invoice_df.copy()[merged_gocardless_invoice_df[payment_amount_column] > 0.005]
         df["payment.description"] = df["payment.metadata.INVOICE_ID"] + f"/{payment_id}"
         df["payment.charge_date"] = df[charge_date_column]
         df["payment.amount"] = df[payment_amount_column]
