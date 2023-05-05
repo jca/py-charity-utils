@@ -21,10 +21,11 @@ to `.devcontainer/.env` and adjusted
 
 The scripts in this using as input a CSV file with a convention based layout
 
-|        | customer_id     | customer_name  | gocardless_email  | item_lines.1.child_name | item_lines.2.child_name |
+| meta   | customer_id     | customer_name  | gocardless_email  | item_lines.1.child_name | item_lines.2.child_name |
 | ------ | ----------------| -------------- | ----------------- | ----------------------- | ----------------------- |
 | title  | Customer ID     | Customer name  | Gocardless email  | Classes - First child   | Classes - Second child  |
 | amount |                 |                |                   | 100.00                  | 90.00                   |
+| -      | Rows starting   | with a "-" are | skipped           |                         |                         |
 |        | ABC1            | Pierre Curie   | pierre@curie.fr   | Irene                   | Eve                     |
 |        | ABC2            | Louis Pasteur  | louis@pasteur.fr  | Jean-Baptiste           | Marie-Louise            |
 
@@ -68,7 +69,7 @@ Outputs:
 
 - GoCardless payment CSV: this file can be imported in GoCardless
 
-### send-mail-with-attachment (IN PROGRESS)
+### send-mail-with-attachment
 
 Required environment variables:
 
@@ -79,7 +80,10 @@ Required environment variables:
 
 Inputs:
 
-- Invoice CSV
+- CSV file
+- Template email
+- Template attachement
+- Fields describing CSV file and send-out options
 
 Process:
 
@@ -88,4 +92,4 @@ Process:
 - Send out a summary email back to "SMTP_USERNAME", including an archive of
   the emails and attachments sent
 
-Outputs: none - this script only sends emails
+Outputs: logs and generated pdf files in a temporary directory. This script generates and sends emails
