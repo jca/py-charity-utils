@@ -5,7 +5,8 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 # Create the user
-RUN groupadd --gid $USER_GID $USERNAME \
+RUN export DEBIAN_FRONTEND=noninteractive \
+    && groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
     && apt-get update \
     && apt-get install -y sudo \
@@ -25,13 +26,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 # Install python dependencies
 RUN pip3 install \
     mypy \
-    poetry \
-    pre-commit \
-    vim
-
-# Cache pre-commit hooks globally
-COPY .pre-commit-config.yaml .
-RUN git init . && pre-commit install-hooks
+    poetry
 
 # Ensure the poetry environment is visible to VSCode
 RUN poetry config virtualenvs.in-project true
