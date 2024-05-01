@@ -2,6 +2,7 @@
 Send templated HTML emails with pdf attachments templated from HTML
 """
 import argparse
+from datetime import date
 from distutils.dir_util import copy_tree
 import io
 import logging
@@ -157,10 +158,12 @@ def main():
             if recipient_email.strip() == "":
                 raise ValueError(f"{record=} must contain an {email_field}")
 
-            attachment_html_path = f'{tmp_dir_path}/{attachment_file_prefix}-{id}.html'
-            attachment_pdf_path = f'{output_dir}/{attachment_file_prefix}-{id}.pdf'
+            attachment_html_path = f'{tmp_dir_path}/{attachment_file_prefix}{id}.html'
+            attachment_pdf_path = f'{output_dir}/{attachment_file_prefix}{id}.pdf'
 
             structured_record = expand_record_lists(record)
+            structured_record["today"] = date.today().strftime("%d/%m/%Y")
+            structured_record["attachment_file_prefix"] = attachment_file_prefix
             email_html = email_template.render(**structured_record)
             attachment_html = attachment_template.render(**structured_record)
             with open(attachment_html_path, 'w', encoding="utf-8") as attachment_file:
@@ -189,7 +192,7 @@ def main():
             logging.info(f"{log_prefix} sending email to {recipient_email}: {os.path.basename(attachment_pdf_path)}")
             if args.force:
                 message = prepare_message(
-                    SMTP_USER,
+                    email_sender,
                     recipient_email,
                     email_reply_to,
                     email_subject,
@@ -198,7 +201,6 @@ def main():
                         attachment_pdf_path,
                     ],
                 )
-                message["Reply-To"] = "tresorerie@lespetitscameleons.org.uk"
                 smtp_server.send_message(message)
 
     logging.info(f"successfully sent {len(messages)} messages")

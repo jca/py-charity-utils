@@ -32,9 +32,9 @@ def parse_args():
     )
 
     parser.add_argument(
-        '--input-gocardless-customers-csv',
-        dest='input_gocardless_customers_csv',
-        help='path to GoCardless customer CSV export',
+        '--input-gocardless-payment-template-csv',
+        dest='input_gocardless_payment_template_csv',
+        help='path to GoCardless payment template CSV export',
         type=pathlib.Path,
         required=True
     )
@@ -97,11 +97,11 @@ def main():
     """main"""
 
     args = parse_args()
-    gocardless_all_customers_df = pandas.read_csv(args.input_gocardless_customers_csv)
+    gocardless_payment_template_df = pandas.read_csv(args.input_gocardless_payment_template_csv)
     raw_invoice_df = pandas.read_csv(args.input_invoice_requests_csv)
 
     payments_df = process_payments(
-        gocardless_all_customers_df=gocardless_all_customers_df,
+        gocardless_payment_template_df=gocardless_payment_template_df,
         raw_invoice_df=raw_invoice_df,
         invoice_id_prefix=args.invoice_id_prefix,
         invoice_date=args.invoice_date,
@@ -117,7 +117,7 @@ def main():
 
 
 def process_payments(
-    gocardless_all_customers_df: pandas.DataFrame,
+    gocardless_payment_template_df: pandas.DataFrame,
     raw_invoice_df: pandas.DataFrame,
     invoice_id_prefix: str,
     invoice_date: str,
@@ -139,7 +139,7 @@ def process_payments(
         "customer.company_name",
         "customer.email",
     }
-    missing_gocardless_customer_df_columns = required_customer_columns.difference(gocardless_all_customers_df.columns)
+    missing_gocardless_customer_df_columns = required_customer_columns.difference(gocardless_payment_template_df.columns)
     assert len(missing_gocardless_customer_df_columns) == 0, (
         f"Missing required columns from gocardless customer csv: \n"
         f"{missing_gocardless_customer_df_columns}"
@@ -161,10 +161,10 @@ def process_payments(
     )
 
     # Gocardless: drop duplicates
-    gocardless_customers_df = gocardless_all_customers_df.drop_duplicates('customer.email', keep='last')
+    gocardless_customers_df = gocardless_payment_template_df.drop_duplicates('customer.email', keep='last')
 
     # Gocardless: drop all pre-generated payment columns from gocardless csv
-    non_payment_cols = [col for col in gocardless_all_customers_df.columns if "payment." not in col]
+    non_payment_cols = [col for col in gocardless_payment_template_df.columns if "payment." not in col]
     gocardless_customers_df = gocardless_customers_df[non_payment_cols]
 
     item_line_amount_pattern = r'^item_lines.\d+.amount'
@@ -258,7 +258,7 @@ def process_payments(
 
     # Invoice requests: Build up invoice id
     merged_gocardless_invoice_df["payment.metadata.INVOICE_ID"] = \
-        f"{invoice_id_prefix}/" + merged_gocardless_invoice_df[invoice_customer_id_field]
+        f"{invoice_id_prefix}" + merged_gocardless_invoice_df[invoice_customer_id_field]
     merged_gocardless_invoice_df["payment.metadata.INVOICE_DATE"] = invoice_date
 
     # Scatter over payments
@@ -302,7 +302,7 @@ def process_payments(
     cumulated_payment_amount = payment_df["payment.amount"].sum()
     cumulated_invoice_amount = gocardless_invoice_df[invoice_total_amount_field].sum()
 
-    assert cumulated_payment_amount == cumulated_invoice_amount, (
+    assert abs(cumulated_payment_amount - cumulated_invoice_amount) < 0.001, (
         f"There is a difference between {cumulated_invoice_amount=} and {cumulated_payment_amount=} \n"
         f"{payment_df=} \n"
         f"{gocardless_invoice_df=} \n"
